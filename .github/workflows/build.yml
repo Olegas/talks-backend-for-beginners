@@ -27,7 +27,7 @@ jobs:
       - name: Bundle
         run: |
           npm install
-          npm run shower bundle
+          npm run bundle
 
       - name: Upload static files as artifact
         id: deployment
