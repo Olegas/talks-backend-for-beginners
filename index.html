@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Shower Presentation Engine</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="node_modules/@shower/ribbon/styles/styles.css">
+    <style>
+        .shower {
+            --slide-ratio: calc(16 / 9);
+        }
+
+        .slide:before {
+            content: '';
+            background: url(img/image2.png);
+            background-size: contain;
+            display: block;
+            position: absolute;
+            top: 20px;
+            width: 95px;
+            height: 34px;
+        }
+
+        .saby-style .slide:after {
+            background-image: url(img/ribbon-blue.svg);
+        }
+
+        .saby-style {
+            --color-line: rgb(31, 110, 223);
+        }
+
+        .saby-style .progress:before {
+            background-color: rgb(31, 110, 223);
+        }
+
+        .saby-style .slide li::before {
+            color: rgb(31, 110, 223);
+        }
+
+        .saby-style .slide ul > li::before {
+            content: url(img/bullet.svg);
+        }
+
+        table th {
+            background-color: rgb(31, 110, 223);
+            color: white;
+        }
+
+        .questions {
+            background-image: url(img/image10.png);
+            background-size: 100% 100%;
+            background-position: right top;
+            background-repeat: no-repeat;
+        }
+    </style>
+</head>
+<body class="shower list saby-style">
+
+<header class="caption">
+    <h1>Бэкэнд для начинающих</h1>
+    <p>&hellip;и не только</p>
+</header>
+
+<section class="slide">
+    <h2>Бэкэнд для начинающих&hellip; и не только</h2>
+    <h3>Елифантьев Олег</h3>
+    <p>
+        Тензор, ведущий разработчик<br/>
+        Teamlead, full-stack<br/>
+    </p>
+    <p style="display: flex; align-items: center">
+        <img src="img/tg.png" width="24px" height="24px"/>&nbsp;oelifantiev
+    </p>
+    <img class="next place bottom right" src="img/hello.png" width="25%"/>
+</section>
+
+<section class="slide">
+    <h2>Оговорочки</h2>
+    <p>О каком бэкэнде речь: работа с данными, хранение, обработка, в т.ч. под нагрузкой.</p>
+    <p>Большинство идей рассмотрено на примере реляционной
+        БД PostgreSQL (хотя некоторые проблемы актуальны и для NoSQL БД).</p>
+</section>
+
+<section class="slide">
+    <h2>О чем поговорим?</h2>
+    <ul>
+        <li>ACID</li>
+        <li>Атомарность и транзакции</li>
+        <li>Согласованность и инварианты</li>
+        <li>Изоляция и артефакты доступа к данным</li>
+        <li>Блокировки, в том числе "смертельные"</li>
+        <li>Инварианты, которые не выразить языком БД</li>
+    </ul>
+</section>
+
+<!--
+<section class="slide">
+    <h2>Первые шаги</h2>
+    <p>Соблазн: взять ORM</p>
+    <ul>
+        <li>Не надо учить новый язык</li>
+        <li>Можно быстро набросать каркас приложения</li>
+        <li>Он же решит за меня все проблемы, правда?</li>
+    </ul>
+</section>
+-->
+
+<section class="slide">
+    <h2>Давайте набросаем простой форум?</h2>
+    <h3>Пользователь</h3>
+    <pre>
+            <code>const User = define('User', {
+    email: { type: 'string' },
+    name: { type: 'string' }
+})
+            </code>
+        </pre>
+</section>
+
+<section class="slide">
+    <h2>Давайте набросаем простой форум?</h2>
+    <h3>Тема</h3>
+    <pre>
+            <code>const Topic = define('Topic', {
+    content: { type: 'string' },
+    viewCount: { type: 'integer' }
+});
+Topic.belongsTo(User)
+            </code>
+        </pre>
+</section>
+
+<section class="slide">
+    <h2>Давайте набросаем простой форум?</h2>
+    <h3>Реакция к теме</h3>
+    <pre>
+            <code>const Emotion = define('Emotion', {
+    emoji: { type: 'string' }
+});
+Emotion.belongsTo(Topic)
+Emotion.belongsTo(User)
+            </code>
+        </pre>
+</section>
+
+<!--
+<section class="slide">
+    <h2>Все в порядке?</h2>
+    <p>Много проблем заметили?</p>
+</section>
+-->
+
+<section class="slide">
+    <h2 class="shout">ACID</h2>
+</section>
+
+<section class="slide">
+    <h2>ACID</h2>
+    <ul>
+        <li class="next">A &mdash; Atomicity</li>
+        <li class="next">C &mdash; Consistency</li>
+        <li class="next">I &mdash; Isolation</li>
+        <li class="next">D &mdash; Durability</li>
+    </ul>
+</section>
+
+<section class="slide">
+    <h2 class="shout">Атомарность</h2>
+</section>
+
+<section class="slide">
+    <h2>Атомарность, транзакции</h2>
+    <p>Транзакция &mdash; группа операций с базой данных, которая может быть выполнена целиком (то есть
+        атомарно) либо отменена.</p>
+    <p>Даже один запрос это по сути тоже транзакция, просто не явная.</p>
+</section>
+
+<section class="slide">
+    <h2 class="shout">Согласованность</h2>
+</section>
+
+<section class="slide">
+    <h2>Consistency &mdash; согласованность</h2>
+    <p>Инвариант &mdash; некоторое утверждение о данных, которое остается неизменным на протяжении выполнения
+        программы.</p>
+    <p>Обычно это бизнес-требования.</p>
+    <p>Примеры:</p>
+    <ul>
+        <li>У пользователя уникальный email;</li>
+        <li>На данной теме от данного пользователя может быть только один эмодзи.</li>
+    </ul>
+</section>
+
+<section class="slide">
+    <h2>Consistency &mdash; согласованность</h2>
+    <p>БД обеспечивает согласованность и выполнение тех инвариантов, о которых она знает!</p>
+    <p>Для того что бы согласованность достигалась, надо понятно "объяснять" БД, что вы хотите сделать.</p>
+</section>
+
+<section class="slide">
+    <h2>Consistency &mdash; согласованность</h2>
+    <p>Наше приложение:</p>
+    <ul>
+        <li>Связи между таблицами + реакции на изменения (ON DELETE CASCADE)</li>
+        <li>not null</li>
+        <li>Уникальные индексы: User(email), Emotion(user_id, topic_id)</li>
+    </ul>
+    <p class="note">Да, и не забывайте индексы на внешние ключи!</p>
+</section>
+
+<section class="slide">
+    <h2>Уникальные индексы? И так сойдет!</h2>
+    <blockquote>
+        <p>С ними одна морока! Ошибешься, и потом лови ошибки с прода что запись не создалась!&copy;</p>
+    </blockquote>
+    <img class="next place bottom right" src="img/to-the-prod.webp" width="25%"/>
+</section>
+
+<section class="slide">
+    <h2>И так сойдет?</h2>
+    <p>Рассмотрим две задачи нашего приложения:</p>
+    <ul>
+        <li>Регистрация пользователя</li>
+        <li>Установка эмодзи на тему</li>
+    </ul>
+</section>
+
+<section class="slide">
+    <h2>И так сойдет?</h2>
+    <pre>
+            <code>const emoji = Emotion.findOne({
+    user_id: current_user_id,
+    topic_id: current_topic_id
+});
+if (!emoji) {
+    Emotion.add({ ... })
+}
+            </code>
+        </pre>
+    <img class="next place bottom right" src="img/doesnt-working.webp" width="25%"/>
+</section>
+
+<section class="slide">
+    <h2>Приходят два HTTP-запроса в бар...</h2>
+    <p>А что вы будете делать при конкурентных запросах?</p>
+    <ul>
+        <li class="next">Rage clicks</li>
+        <li class="next">Плохая коннективность</li>
+        <li class="next">Ошибки в реализации</li>
+        <li class="next">&hellip;да что угодно! Поверьте, они будут!</li>
+    </ul>
+</section>
+
+<section class="slide">
+    <h2>Решение</h2>
+    <p>Уникальный индекс на пару (user_id, topic_id)</p>
+    <p>При попытке вставить дубль &mdash; исключение</p>
+    <p class="next">Можно использовать ON CONFLICT DO NOTHING и избавиться от исключения</p>
+</section>
+
+<section class="slide">
+    <h2>Внимание! Индексы - не серебряная пуля!</h2>
+    <p>
+        Важны в первую очередь инварианты. Индексы &mdash; лишь одно из стредств.
+    </p>
+    <p>Нельзя просто "обмазать все индексами" &mdash; может стать только хуже.</p>
+    <p>Большой количество индексов влияет на вставку данных в таблицу, замедляет ее, имейте это ввиду. Кроме того,
+        индексы занимают место на диске (иногда больше, чем сами данные)</p>
+</section>
+
+<section class="slide">
+    <h2>Общий паттерн: Прочитали, изменили, записали</h2>
+    <p>Задача: счетчик просмотров</p>
+    <pre><code>const topic = Topic.findOne({ topic_id: id });
+topic.viewCount++;
+topic.save();</code></pre>
+</section>
+
+<section class="slide">
+    <h2>Решение: атомарные операции</h2>
+    <pre>
+    <code>UPDATE Topic
+   SET viewCount = viewCount + 1
+ WHERE id = $1</code></pre>
+    <p>В ORM обычно есть аналоги!</p>
+</section>
+
+<section class="slide">
+    <h2>Другие примеры</h2>
+    <ul>
+        <li>Работа с массивами</li>
+        <li>Работа с JSON-документами</li>
+        <li>Правка текста</li>
+    </ul>
+</section>
+
+<section class="slide">
+    <h2 class="shout">Изоляция</h2>
+</section>
+
+<section class="slide">
+    <h2>Вспомним транзакции</h2>
+    <p>Транзакция &mdash; группа операций с базой данных, которая может быть завершена целиком либо отменена.</p>
+    <p>В идеале: пока не завершилась &mdash; ни на кого не влияет и не видит, что делают другие.</p>
+    <p>На деле все сложнее&hellip;</p>
+    <img class="next place bottom right" src="img/tema-isnt-clear.webp" width="25%"/>
+</section>
+
+<section class="slide">
+    <h2>Артефакты доступа к данным</h2>
+    <ul>
+        <li>Потерянное обновление<sup>*</sup></li>
+        <li>Грязное чтение</li>
+        <li>Неповторяющееся чтение</li>
+        <li>Фантомное чтение</li>
+    </ul>
+    <p class="note"><sup>*</sup> &mdash; в PostgreSQL в принципе не возможно, но для понимания картины стоит упомянуть
+    </p>
+</section>
+
+<section class="slide">
+    <h2>Потерянное обновление</h2>
+    <table>
+        <tbody>
+        <tr>
+            <th>Транзакция 1</th>
+            <th>Транзакция 2</th>
+        </tr>
+        <tr>
+            <td>UPDATE x SET y = y + 10 WHERE z = 1</td>
+            <td>UPDATE x SET y = y + 20 WHERE z = 1</td>
+        </tr>
+        </tbody>
+    </table>
+    <p>Результат: x увеличился на 10 или на 20, как повезет, но не на 30</p>
+</section>
+
+<section class="slide">
+    <h2>Грязное чтение</h2>
+    <table>
+        <tbody>
+        <tr>
+            <th>Транзакция 1</th>
+            <th>Транзакция 2</th>
+        </tr>
+        <tr>
+            <td>UPDATE x SET y = 10 WHERE z = 1</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td></td>
+            <td>SELECT y FROM x WHERE z = 1;</td>
+        </tr>
+        <tr>
+            <td>ROLLBACK</td>
+            <td></td>
+        </tr>
+        </tbody>
+    </table>
+    <p>Результат: транзакция 2 думает, что y = 10, но это не так</p>
+</section>
+
+<section class="slide">
+    <h2>Неповторяющееся чтение</h2>
+    <table>
+        <tbody>
+        <tr>
+            <th>Транзакция 1</th>
+            <th>Транзакция 2</th>
+        </tr>
+        <tr>
+            <td></td>
+            <td>SELECT y FROM x WHERE z = 1;
+            </td>
+        </tr>
+        <tr>
+            <td>UPDATE x SET y = 10 WHERE z = 1</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>COMMIT</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td></td>
+            <td>SELECT y FROM x WHERE z = 1;
+            </td>
+        </tr>
+        </tbody>
+    </table>
+    <p>В транзакции 2 y сперва имеет какое-то начальное значение, затем = 10 (т.к. первая транзакция завершилась)</p>
+</section>
+
+
+<section class="slide">
+    <h2>Фантомное чтение</h2>
+    <table>
+        <tbody>
+        <tr>
+            <th>Транзакция 1</th>
+            <th>Транзакция 2</th>
+        </tr>
+        <tr>
+            <td>SELECT COUNT(id) FROM x</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td></td>
+            <td>INSERT INTO x VALUES (&hellip;)</td>
+        </tr>
+        <tr>
+            <td></td>
+            <td>COMMIT</td>
+        </tr>
+        <tr>
+            <td>SELECT COUNT(id) FROM x</td>
+            <td></td>
+        </tr>
+        </tbody>
+    </table>
+    <p>Количество будет отличаться. Первая транзакция увидела новые записи, которые вставила вторая</p>
+</section>
+
+<section class="slide">
+    <h2>Уровни изоляции</h2>
+    <table>
+        <tbody>
+        <tr>
+            <th>Уровень изоляции</th>
+            <th>Фантомное чтение</th>
+            <th>Неповторяющееся чтение</th>
+            <th>Грязное чтение</th>
+        </tr>
+        <tr>
+            <td>Serializable</td>
+            <td>✅</td>
+            <td>✅</td>
+            <td>✅</td>
+        </tr>
+        <tr>
+            <td>Repeatable read</td>
+            <td>❌</td>
+            <td>✅</td>
+            <td>✅</td>
+        </tr>
+        <tr>
+            <td>Read committed</td>
+            <td>❌</td>
+            <td>❌</td>
+            <td>✅</td>
+        </tr>
+        </tbody>
+    </table>
+</section>
+
+<section class="slide">
+    <h2 class="shout">Блокировки</h2>
+</section>
+
+<section class="slide">
+    <h2>Почему атомарные операции работают?</h2>
+    <p>Почему они не страдают от артефакта "потерянное обновление"?</p>
+</section>
+
+<section class="slide">
+    <h2>Почему атомарные операции работают?</h2>
+    <p>UPDATE устанавливает блокировку строки</p>
+    <p style="text-align: center">
+        <img src="img/atomic-ops-timing.png"/>
+    </p>
+</section>
+
+<section class="slide">
+    <h2>Задачка про врачей на дежурстве</h2>
+    <img src="img/duty-table.png" style="float: right"/>
+    <ul>
+        <li>Врачи дежурят сменами</li>
+        <li>Должен быть хотя-бы один на дежурстве</li>
+        <li>Можно взять отгул, но только если кто-то другой останется</li>
+    </ul>
+    <pre class="next">
+    <code>const countOnDuty = Duty.findAll({ shift_id: 10 });
+if (countOnDuty.length > 1) {
+    Duty.remove({ shift_id: 10, person_id: 15 });
+}</code>
+    </pre>
+</section>
+
+<section class="slide">
+    <h2>Хочу как атомарные операции!</h2>
+    <p class="next">SELECT &hellip; FOR UPDATE</p>
+    <pre class="next">
+    <code>const countOnDuty = Duty
+        .findAll({ shift_id: 10 })
+        <mark class="next">.forUpdate();</mark>
+if (countOnDuty.length > 1) {
+    Duty.remove({ shift_id: 10, person_id: 15 });
+}</code>
+    </pre>
+</section>
+
+<section class="slide">
+    <h2>Главное: не забыть оберунть в транзакцию!</h2>
+    <pre>
+    <code><mark>Transaction.begin(() => {</mark>
+    const countOnDuty = Duty
+        .findAll({ shift_id: 10 })
+        <mark>.forUpdate();</mark>
+    if (countOnDuty.length > 1) {
+        Duty.remove({ shift_id: 10, person_id: 15 });
+    }</code>
+    </pre>
+</section>
+
+<section class="slide">
+    <h2 class="shout">Deadlock</h2>
+</section>
+
+<section class="slide">
+    <h2>Опасности блокировок</h2>
+    <p>Блокировки записей могут привести к взаимоблокировкам (deadlock) параллельных процессов</p>
+    <p>Пример: из внешней системы выгружается количество просмотров постов форума, получаем пары (topic_id,
+        view_count)</p>
+</section>
+
+<section class="slide">
+    <h2>Пример deadlock'а</h2>
+    <p>Работаем в транзакции, применяем атомарные операции, выполняем для каждой входящей пары запрос:</p>
+    <pre>
+        <code>UPDATE Topic
+   SET viewСount = viewСount + $1
+ WHERE id = $2</code>
+        </pre>
+</section>
+
+<section class="slide">
+    <h2>Пример deadlock'а</h2>
+    <p style="text-align: center">
+        <img src="img/deadlock-timing.png"/>
+    </p>
+    <img class="next place bottom right" src="img/abonent.webp" width="25%" style="margin-right: -30px;"/>
+</section>
+
+<section class="slide">
+    <h2>Как починить? Обеспечить порядок!</h2>
+    <p style="text-align: center">
+        <img src="img/deadlock-timing-fixed.png"/>
+    </p>
+</section>
+
+<!--
+<section class="slide">
+    <h2 class="shout">Сложные инварианты</h2>
+</section>
+
+<section class="slide">
+    <h2>Задача: забронировать переговорку</h2>
+    <p>Пользователь бронирует переговорку на диапазон времени</p>
+    <p style="text-align: center">
+        <img src="booking-table.png"/>
+    </p>
+    <p>Как не допустить конфликт при бронировании?</p>
+    <img class="next place bottom right" src="./po-neznanke.webp" width="25%"/>
+</section>
+
+<section class="slide">
+    <h2>Задача: забронировать переговорку</h2>
+    <p>Проблема: на уровне бизнес-процесса инвариант есть, а на уровне базы данных его нет. Нечего блокировать, нечего
+        отслеживать</p>
+    <ul class="next">
+        <li>Явно заблокировано связанный объект? <span class="next">⚠️ может пострадать производительность</span></li>
+        <li class="next">Материализация конфликтов <span class="next">⚠️ сложно, дорого</span></li>
+        <li class="next">Можно получить блокировку где-то на стороне <span
+                class="next">⚠️ ️появляется точка отказа</span></li>
+    </ul>
+</section>
+
+<section class="slide">
+    <h2>Задача: забронировать переговорку</h2>
+    <p>Возможное решение &mdash; advisory locks (
+        <mark>нестандартное решение, только Postgres!</mark>
+        )
+    </p>
+    <ul>
+        <li class="next">Действует на уровне транзакции</li>
+        <li class="next">При завершении/откате автоматически снимается</li>
+        <li class="next">Что блокирует?&hellip; BigInt число (или пару Int)!</li>
+    </ul>
+</section>
+
+<section class="slide">
+    <h2>Задача: забронировать переговорку &mdash; advisory locks</h2>
+    <p>"Как бы" заблокируем идентификатор помещения</p>
+    <pre>
+        <code>SELECT <mark>pg_advisory_xact_lock</mark>(
+       "Bookings"::regclass::oid
+     , $1 <span class="comment">-- Идентификатор помещения</span>
+)
+        </code>
+    </pre>
+</section>
+-->
+<!--
+
+<section class="slide">
+    <h2 class="shout grow">Микросервисы!</h2>
+</section>
+
+<section class="slide">
+    <h2>Микросервисы</h2>
+    <ul>
+        <li class="next">Много сервисов</li>
+        <li class="next">Как правило каждый со своей базой данных</li>
+        <li class="next">По отдельности &mdash; все понятно, а как целиком обеспечить согласованность и атомарность?</li>
+    </ul>
+</section>
+
+<section class="slide">
+    <h2 class="shout">2-Phase Commit</h2>
+</section>
+
+<section class="slide">
+    <h2>Микросервисы и консистентность &mdash; 2PC</h2>
+    <p>Двухфазный коммит</p>
+    <p style="text-align: center">
+        <img src="2pc.png"/>
+    </p>
+</section>
+
+<section class="slide">
+    <h2>Микросервисы и консистентность &mdash; 2PC</h2>
+    <p>Плюсы &mdash; консистентность на всех узлах!</p>
+    <p>Минусы &mdash; медленно, страдает доступность системы в целом</p>
+</section>
+
+<section class="slide">
+    <h2 class="shout">Saga</h2>
+</section>
+
+<section class="slide">
+    <h2>Микросервисы и консистентность &mdash; Saga</h2>
+    <ul>
+        <li class="next">Обычные транзакции в рамках одного сервиса</li>
+        <li class="next">Внешняя координация общего бизнес-процесса: оркестрация или хореография</li>
+        <li class="next">В случае нарушения инвариантов или отказа на каком-либо этапе &mdash; компенсирующая транзакция которая все откатывает</li>
+        <li class="next">Eventual consistency</li>
+    </ul>
+</section>
+
+<section class="slide">
+    <h2>Saga и стили коммуникации в микросервисах</h2>
+    <ul>
+        <li class="next">Синхронный &mdash; HTTP-вызов <span class="next">❌</span></li>
+        <li class="next">Асинхронный &mdash; через шину событий <span class="next">✅</span></li>
+    </ul>
+</section>
+
+<section class="slide">
+    <h2>Асинхронное взаимодействие и отправка событий</h2>
+    <p>В сервисе А что-то произошло (создан заказа, зарегистрирован пользователь).</p>
+    <ul>
+        <li class="next">Как сообщить об этом другом сервису не сломать согласованность?</li>
+        <li class="next">Что если отправили событие, а транзакция откатилась?</li>
+    </ul>
+    <p class="next">Atomicity! Возможное решение: Transactional outbox</p>
+</section>
+
+<section class="slide">
+    <h2>Transactional outbox</h2>
+    <p>Используем транзакции в локальной БД себе на пользу!</p>
+    <ul>
+        <li class="next">Заведем таблицу в БД для событий</li>
+        <li class="next">Событие не отправляем сразу, а складываем в БД (в рамках транзакции)</li>
+        <li class="next">Когда транзакция завершится, запись события станет видимой другим</li>
+        <li class="next">Если транзакция откатится &mdash; запись события пропадет</li>
+        <li class="next">Сторонний процесс вычитывает события и отправляет их в брокер</li>
+    </ul>
+</section>
+
+<section class="slide">
+    <h2>Transactional outbox &mdash; отправка</h2>
+    <ul>
+        <li class="next">Polling publisher &mdash; просто периодически опрашиваем таблицу с событиями</li>
+        <li class="next">Transaction log tailing &mdash; читаем журнал транзакций БД и берем данные непосредственно оттуда</li>
+    </ul>
+</section>
+-->
+
+<section class="slide">
+    <h2>Итоги</h2>
+    <ul>
+        <li>ACID</li>
+        <li>Атомарность и транзакции</li>
+        <li>Согласованность и инварианты</li>
+        <li>Изоляция и артефакты доступа к данным</li>
+        <li>Блокировки, в том числе "смертельные"</li>
+        <li>Инварианты, которые не выразить языком БД</li>
+    </ul>
+</section>
+
+<section class="slide">
+    <img class="cover" src="img/kabanchik.png"/>
+    <img class="next place right bottom" src="img/3digits.webp" width="25%"/>
+</section>
+
+<section class="slide questions">
+    <h2>Появились вопросы?</h2>
+    <p>
+        Елифантьев Олег<br/>
+        Тензор, ведущий разработчик<br/>
+        Teamlead, full-stack<br/>
+    </p>
+    <p style="display: flex; align-items: center">
+        <img src="img/tg.png" width="24px" height="24px"/>&nbsp;oelifantiev
+    </p>
+
+</section>
+
+<footer class="badge">
+    <a href="https://github.com/shower/shower">Fork me on GitHub</a>
+</footer>
+
+<div class="progress"></div>
+
+<script src="node_modules/@shower/core/dist/shower.js"></script>
+<!-- Copyright © 2024 Yours Truly, Famous Inc. -->
+
+</body>
+</html>
