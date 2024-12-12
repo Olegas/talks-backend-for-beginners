@@ -63,6 +63,11 @@
 
 <section class="slide">
     <h2>Бэкэнд для начинающих&hellip; и не только</h2>
+    <h3 class="next">Елифантьев Олег</h3>
+</section>
+
+<section class="slide">
+    <h2>Бэкэнд для начинающих&hellip; и не только</h2>
     <h3>Елифантьев Олег</h3>
     <p>
         Тензор, ведущий разработчик<br/>
@@ -89,7 +94,6 @@
         <li>Согласованность и инварианты</li>
         <li>Изоляция и артефакты доступа к данным</li>
         <li>Блокировки, в том числе "смертельные"</li>
-        <li>Инварианты, которые не выразить языком БД</li>
     </ul>
 </section>
 
@@ -228,7 +232,7 @@ Emotion.belongsTo(User)
 <section class="slide">
     <h2>И так сойдет?</h2>
     <pre>
-            <code>const emoji = Emotion.findOne({
+            <code>const emoji = await Emotion.findOne({
     user_id: current_user_id,
     topic_id: current_topic_id
 });
@@ -261,7 +265,7 @@ if (!emoji) {
 <section class="slide">
     <h2>Внимание! Индексы - не серебряная пуля!</h2>
     <p>
-        Важны в первую очередь инварианты. Индексы &mdash; лишь одно из стредств.
+        Важны в первую очередь инварианты. Индексы &mdash; лишь одно из средств.
     </p>
     <p>Нельзя просто "обмазать все индексами" &mdash; может стать только хуже.</p>
     <p>Большой количество индексов влияет на вставку данных в таблицу, замедляет ее, имейте это ввиду. Кроме того,
@@ -271,7 +275,7 @@ if (!emoji) {
 <section class="slide">
     <h2>Общий паттерн: Прочитали, изменили, записали</h2>
     <p>Задача: счетчик просмотров</p>
-    <pre><code>const topic = Topic.findOne({ topic_id: id });
+    <pre><code>const topic = await Topic.findOne({ topic_id: id });
 topic.viewCount++;
 topic.save();</code></pre>
 </section>
@@ -327,8 +331,8 @@ topic.save();</code></pre>
             <th>Транзакция 2</th>
         </tr>
         <tr>
-            <td>UPDATE x SET y = y + 10 WHERE z = 1</td>
-            <td>UPDATE x SET y = y + 20 WHERE z = 1</td>
+            <td>UPDATE x<br /><b>SET y = y + 10</b><br />WHERE z = 1</td>
+            <td>UPDATE x<br /><b>SET y = y + 20</b><br />WHERE z = 1</td>
         </tr>
         </tbody>
     </table>
@@ -344,12 +348,12 @@ topic.save();</code></pre>
             <th>Транзакция 2</th>
         </tr>
         <tr>
-            <td>UPDATE x SET y = 10 WHERE z = 1</td>
+            <td>UPDATE x <b>SET y = 10</b> WHERE z = 1</td>
             <td></td>
         </tr>
         <tr>
             <td></td>
-            <td>SELECT y FROM x WHERE z = 1;</td>
+            <td><b>SELECT y</b> FROM x WHERE z = 1;</td>
         </tr>
         <tr>
             <td>ROLLBACK</td>
@@ -370,11 +374,11 @@ topic.save();</code></pre>
         </tr>
         <tr>
             <td></td>
-            <td>SELECT y FROM x WHERE z = 1;
+            <td><b>SELECT y</b> FROM x WHERE z = 1;
             </td>
         </tr>
         <tr>
-            <td>UPDATE x SET y = 10 WHERE z = 1</td>
+            <td>UPDATE x <b>SET y = 10</b> WHERE z = 1</td>
             <td></td>
         </tr>
         <tr>
@@ -383,7 +387,7 @@ topic.save();</code></pre>
         </tr>
         <tr>
             <td></td>
-            <td>SELECT y FROM x WHERE z = 1;
+            <td><b>SELECT y</b> FROM x WHERE z = 1;
             </td>
         </tr>
         </tbody>
@@ -401,19 +405,19 @@ topic.save();</code></pre>
             <th>Транзакция 2</th>
         </tr>
         <tr>
-            <td>SELECT COUNT(id) FROM x</td>
+            <td>SELECT <b>COUNT(id)</b> FROM x</td>
             <td></td>
         </tr>
         <tr>
             <td></td>
-            <td>INSERT INTO x VALUES (&hellip;)</td>
+            <td><b>INSERT INTO x</b> VALUES (&hellip;)</td>
         </tr>
         <tr>
             <td></td>
             <td>COMMIT</td>
         </tr>
         <tr>
-            <td>SELECT COUNT(id) FROM x</td>
+            <td>SELECT <b>COUNT(id)</b> FROM x</td>
             <td></td>
         </tr>
         </tbody>
@@ -472,14 +476,14 @@ topic.save();</code></pre>
 
 <section class="slide">
     <h2>Задачка про врачей на дежурстве</h2>
-    <img src="img/duty-table.png" style="float: right"/>
+    <img src="img/duty-table.png" style="float: right" class="next"/>
     <ul>
         <li>Врачи дежурят сменами</li>
         <li>Должен быть хотя-бы один на дежурстве</li>
         <li>Можно взять отгул, но только если кто-то другой останется</li>
     </ul>
     <pre class="next">
-    <code>const countOnDuty = Duty.findAll({ shift_id: 10 });
+    <code>const countOnDuty = await Duty.findAll({ shift_id: 10 });
 if (countOnDuty.length > 1) {
     Duty.remove({ shift_id: 10, person_id: 15 });
 }</code>
@@ -490,7 +494,7 @@ if (countOnDuty.length > 1) {
     <h2>Хочу как атомарные операции!</h2>
     <p class="next">SELECT &hellip; FOR UPDATE</p>
     <pre class="next">
-    <code>const countOnDuty = Duty
+    <code>const countOnDuty = await Duty
         .findAll({ shift_id: 10 })
         <mark class="next">.forUpdate();</mark>
 if (countOnDuty.length > 1) {
@@ -502,12 +506,12 @@ if (countOnDuty.length > 1) {
 <section class="slide">
     <h2>Главное: не забыть оберунть в транзакцию!</h2>
     <pre>
-    <code><mark>Transaction.begin(() => {</mark>
-    const countOnDuty = Duty
+    <code><mark>Transaction.begin(async () => {</mark>
+    const countOnDuty = await Duty
         .findAll({ shift_id: 10 })
         <mark>.forUpdate();</mark>
     if (countOnDuty.length > 1) {
-        Duty.remove({ shift_id: 10, person_id: 15 });
+        await Duty.remove({ shift_id: 10, person_id: 15 });
     }</code>
     </pre>
 </section>
